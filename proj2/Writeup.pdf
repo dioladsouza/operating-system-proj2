@@ -1,0 +1,31 @@
+1. (b), (c)
+   Heap memory and Global variables are shared across threads in a multithreaded process.
+
+2. (a) "top" and stack array will have a race condition since they are shared resources among the functions.
+   (b) Race condition can be fixed using mutex locks which ensures that only one thread modifies top and stack array at a time. Only one thread at
+    a time can execute in the critical section. All other threads are forced to wait on entry.
+
+3. Concurrent execution focuses on the task of running and managing the multiple computations at the same time while parallel execution utilizes 
+   multiple resources to execute tasks simultaneously, making processes faster.
+   Concurrency increases the amount of work finished at a time.	While parallelism improves the throughput and computational speed of the system.
+
+4. Counting semaphore can be used. 
+    mutex has count = 1, counting has count = N
+    When wait() is called, the count of semaphore is reduced by 1. When the semaphore reaches 0, then each thread must wait until the semaphore 
+    count is greater than 0. When connections are closed, the signal() is called which increases its value by 1 and allows another thread to enter.
+    
+5. (a) The lock is to be held for a short duration - spinlock is better because it avoids the overhead of context switching.
+   (b) The lock is to be held for a long duration = mutex lock is better choice.
+   This is because a spinlock continuously checks whether the lock is available. Spinning thread is always in ready state and wastes CPU time. Mutex
+   lock puts the process waiting in queue to sleep and saves resources.
+   (c) A thread may be put to sleep while holding the lock - mutex lock is better. This is because a spinlock cannot release the lock while a thread
+    is holding it, leading to deadlock situations. A mutex lock can be released if the thread holding it is put to sleep, avoiding deadlock 
+    situations.
+
+6.  signal() operation associated with monitors is linked to condition variables. signal() causes a waiting thread to wake up.If there is no waiting 
+    thread, the signal is lost.
+    While in semaphores, signal increases the semaphore count, allowing future entry even if no thread is waiting. This is used to signal that a 
+    resource is now free and can be acquired by another thread.
+
+7. Process cannot hold a spin lock while attempting to acquire a semaphore, because the process might go to sleep while waiting for the semaphore, 
+   and you cannot sleep while holding a spin lock.
