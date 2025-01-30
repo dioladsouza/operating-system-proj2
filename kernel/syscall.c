@@ -102,6 +102,8 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 extern uint64 sys_pipe_rt(void);
+extern uint64 sys_enqueue_task(void);
+extern uint64 sys_dequeue_task(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -127,7 +129,9 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
-[SYS_pipe_rt]    sys_pipe_rt,
+[SYS_pipe_rt] sys_pipe_rt,
+[SYS_enqueue_task] sys_enqueue_task,  
+[SYS_dequeue_task] sys_dequeue_task,  
 };
 
 void

@@ -1,40 +1,61 @@
 #include "../../kernel/types.h"
-#include "../../kernel/riscv.h"
-#include "../../kernel/defs.h"
-#include "../../kernel/param.h"
-#include "../../kernel/memlayout.h"
+#include "../../kernel/param.h" 
+#include "../../kernel/memlayout.h" 
+#include "../../kernel/riscv.h" 
+#include "../../kernel/defs.h" 
 #include "../../kernel/spinlock.h"
 #include "../../kernel/proc.h"
-#include "proj2/user/user.h" 
+#include "../../kernel/sleeplock.h"
+#include "../../kernel/fs.h"
+#include "../../kernel/file.h"
+#include "../../kernel/fcntl.h"
 
-int pipe_rt(int *);
+typedef struct task_t {
+    int priority;
+    int x;
+    int y;
+    char op;
+    int *result;
+    int *error;
+    struct task_t *next;  
+} task_t;
 
-uint64
-sys_pipe_rt(void)
-{
-  uint64 fdarray; // user pointer to array of two integers
-  struct file *rf, *wf;
-  int fd0, fd1;
-  struct proc *p = myproc();
+struct priority_pipe {
+    struct spinlock lock;
+    task_t *head;
+};
 
-  argaddr(0, &fdarray);
-  if(pipealloc(&rf, &wf) < 0)
-    return -1;
-  fd0 = -1;
-  if((fd0 = fdalloc(rf)) < 0 || (fd1 = fdalloc(wf)) < 0){
-    if(fd0 >= 0)
-      p->ofile[fd0] = 0;
-    fileclose(rf);
-    fileclose(wf);
-    return -1;
-  }
-  if(copyout(p->pagetable, fdarray, (char*)&fd0, sizeof(fd0)) < 0 ||
-     copyout(p->pagetable, fdarray+sizeof(fd0), (char *)&fd1, sizeof(fd1)) < 0){
-    p->ofile[fd0] = 0;
-    p->ofile[fd1] = 0;
-    fileclose(rf);
-    fileclose(wf);
-    return -1;
-  }
-  return 0;
+void init_priority_pipe(struct priority_pipe *p) {
+    initlock(&p->lock, "priority_pipe");
+    p->head = 0;
+}
+
+void enqueue_task(struct priority_pipe *p, task_t *task) {
+    acquire(&p->lock);
+
+    if (p->head == 0 || task->priority > p->head->priority) {
+        task->next = p->head;
+        p->head = task;
+    } else {
+        task_t *curr = p->head;
+        while (curr->next && curr->next->priority >= task->priority) {
+            curr = curr->next;
+        }
+        task->next = curr->next;
+        curr->next = task;
+    }
+
+    release(&p->lock);
+}
+
+task_t *dequeue_task(struct priority_pipe *p) {
+    acquire(&p->lock);
+    if (p->head == 0) {
+        release(&p->lock);
+        return 0;
+    }
+    task_t *task = p->head;
+    p->head = p->head->next;
+    release(&p->lock);
+    return task;
 }

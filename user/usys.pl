@@ -37,3 +37,5 @@ entry("sbrk");
 entry("sleep");
 entry("uptime");
 entry("pipe_rt");
+entry("enqueue_task");
+entry("dequeue_task");
